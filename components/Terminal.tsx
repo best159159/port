@@ -1,30 +1,33 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { JetBrains_Mono } from "next/font/google";
+
+const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"] });
 
 interface Line {
   id: string;
-  type: "input" | "output" | "error" | "system" | "success";
+  type: "input" | "output" | "error" | "system" | "boot";
   content: string | string[];
 }
 
-const COMMANDS: Record<string, () => string | string[]> = {
+const COMMANDS: Record<string, () => string[]> = {
   help: () => [
-    "┌─────────────────────────────────────────┐",
-    "│           Available Commands            │",
-    "├─────────────────────────────────────────┤",
-    "│  whoami      → who is Best?             │",
-    "│  about       → full background          │",
-    "│  skills      → tech stack & tools       │",
-    "│  projects    → what I've shipped        │",
-    "│  goals       → where I'm going          │",
-    "│  contact     → get in touch             │",
-    "│  clear       → clear terminal           │",
-    "│  help        → show this menu           │",
-    "└─────────────────────────────────────────┘",
     "",
-    "  Tip: use Tab to autocomplete commands",
+    "  AVAILABLE COMMANDS",
+    "",
+    "  whoami        →  Who is Best?",
+    "  about         →  Full background",
+    "  skills        →  Tech stack & tools",
+    "  projects      →  Things I've built",
+    "  goals         →  Where I'm going",
+    "  contact       →  Get in touch",
+    "  stats         →  System status",
+    "  clear         →  Clear terminal",
+    "",
+    "  Tab autocomplete  ·  ↑↓ history",
+    "",
   ],
   whoami: () => [
     "",
@@ -35,218 +38,200 @@ const COMMANDS: Record<string, () => string | string[]> = {
     "  ██████╔╝███████╗███████║   ██║",
     "  ╚═════╝ ╚══════╝╚══════╝   ╚═╝",
     "",
-    "  Name    →  Best (Michael)",
-    "  Role    →  Builder & Founder",
-    "  Status  →  High School Student, Thailand",
-    "  Mode    →  Building while others sleep",
+    "  name      Best (Michael)",
+    "  role      Builder & Founder",
+    "  location  Thailand",
+    "  mode      Building while others sleep",
     "",
   ],
   about: () => [
     "",
-    "  > Decided early that the traditional path wasn't enough.",
-    "  > Self-taught developer — HTML → JS → React → AI.",
-    "  > Ships real products, not just side projects.",
-    "  > Obsessed with AI, automation, and financial freedom.",
-    "  > Goal: 1,000,000 THB before university is done.",
-    "  > Every project is a bet on my own future.",
+    "  Decided early that the traditional path wasn't enough.",
+    "  Self-taught: HTML → JS → React → AI.",
+    "  Ships real products, not side projects.",
+    "  Obsessed with AI, automation, financial freedom.",
+    "  Goal: 1,000,000 THB before university ends.",
+    "  Every project is a bet on my own future.",
     "",
-    "  While most people are writing essays,",
-    "  I'm writing code.",
+    "  While most people write essays,",
+    "  I write code.",
     "",
   ],
   skills: () => [
     "",
-    "  ── Web Development ──────────────────────",
-    "  HTML · CSS · JavaScript · Next.js · React",
-    "  Tailwind CSS · Framer Motion",
+    "  WEB DEVELOPMENT",
+    "  HTML · CSS · JavaScript · TypeScript",
+    "  Next.js · React · Tailwind · Framer Motion",
     "",
-    "  ── AI & Automation ──────────────────────",
-    "  OpenAI API · Prompt Engineering",
-    "  AI Workflows · Automation Tools",
+    "  AI & AUTOMATION",
+    "  OpenAI API · Prompt Engineering · AI Workflows",
     "",
-    "  ── Finance & Investing ──────────────────",
-    "  Stock Market · Crypto / Web3",
-    "  Technical Analysis · DeFi",
+    "  FINANCE",
+    "  Stock Market · Crypto · Technical Analysis · DeFi",
     "",
-    "  ── Tools ────────────────────────────────",
+    "  TOOLS",
     "  Vercel · Git · GitHub · Figma · VS Code",
     "",
   ],
   projects: () => [
     "",
     "  01  Sentinel AI",
-    "      → AI-powered community safety platform",
-    "      → sentinel-ai-orcin.vercel.app",
+    "      AI-powered community safety platform",
+    "      sentinel-ai-orcin.vercel.app",
     "",
     "  02  GreenLens AI",
-    "      → Environmental analysis with AI for Thailand",
-    "      → greenlens-pi.vercel.app",
+    "      Environmental analysis with AI · Thailand",
+    "      greenlens-pi.vercel.app",
     "",
     "  03  Amantha Hotel",
-    "      → Luxury hotel website, pure vanilla JS",
-    "      → hotel-seven-beta.vercel.app",
+    "      Luxury hotel website · vanilla JS",
+    "      hotel-seven-beta.vercel.app",
     "",
     "  04  Lumina Restaurant",
-    "      → Michelin-star fine dining web experience",
-    "      → restuarant-azure.vercel.app",
-    "",
-    "  → scroll up to see project cards",
+    "      Michelin-star fine dining experience",
+    "      restuarant-azure.vercel.app",
     "",
   ],
   goals: () => [
     "",
-    "  ┌── Short Term ───────────────────────┐",
-    "  │  ✓ Ship 5+ real products            │",
-    "  │  ○ Land first paying freelance client│",
-    "  │  ○ 1M THB before university ends    │",
-    "  └─────────────────────────────────────┘",
+    "  SHORT TERM",
+    "  ✓  Ship 5+ real products",
+    "  ○  Land first paying freelance client",
+    "  ○  1,000,000 THB before university ends",
     "",
-    "  ┌── Long Term ────────────────────────┐",
-    "  │  ○ Build a funded startup           │",
-    "  │  ○ Passive income > active income   │",
-    "  │  ○ Full financial independence      │",
-    "  └─────────────────────────────────────┘",
+    "  LONG TERM",
+    "  ○  Build a funded startup",
+    "  ○  Passive income > active income",
+    "  ○  Full financial independence",
     "",
     "  The clock is running.",
     "",
   ],
   contact: () => [
     "",
-    "  Email   →  best17794@gmail.com",
-    "  GitHub  →  github.com/best159159",
-    "  Vercel  →  vercel.com/best159159s-projects",
+    "  email     best17794@gmail.com",
+    "  github    github.com/best159159",
+    "  vercel    vercel.com/best159159s-projects",
     "",
     "  Open to: Freelance · Collabs · Interesting ideas",
     "",
   ],
   stats: () => [
     "",
-    "  System Status: ONLINE",
-    "  Uptime: 99.99%",
-    "  Revenue: $12,450 MRR",
-    "  Active Users: 10,234",
-    "  Bugs tracked: 12",
-    "  Lines of code: > 250,000",
+    "  STATUS: ONLINE",
     "",
-    "  [All systems fully operational]",
-  ]
+    "  uptime      99.99%",
+    "  projects    4 shipped",
+    "  stack       Next.js 16 + AI",
+    "  mode        always building",
+    "",
+    "  All systems operational.",
+    "",
+  ],
 };
 
-const BOOT_LINES = [
-  "Initializing best.dev v3.0.0...",
-  "Loading neural link protocols....... OK",
-  "Mounting project database........... OK",
-  "Establishing secure connection...... OK",
-  "Verifying identity.................. OK",
-  "Starting interactive session........ OK",
-  "",
-  'Type "help" or click a command below.',
-  "",
+const BOOT_SEQUENCE: Array<{ text: string; type: Line["type"]; delay: number }> = [
+  { text: "> initializing system...", type: "boot", delay: 200 },
+  { text: "> loading modules...",     type: "boot", delay: 420 },
+  { text: "> establishing connection...", type: "boot", delay: 420 },
+  { text: "> ready.",                 type: "boot", delay: 600 },
+  { text: "",                         type: "system", delay: 280 },
+  { text: "  type \"help\" to list commands.", type: "system", delay: 80 },
+  { text: "",                         type: "system", delay: 0 },
 ];
 
-function TypewriterLine({ text, speed = 15, onComplete }: { text: string; speed?: number; onComplete?: () => void }) {
-  const [displayed, setDisplayed] = useState("");
+const QUICK_CMDS = ["whoami", "projects", "skills", "goals", "contact"];
 
-  useEffect(() => {
-    let i = 0;
-    const interval = setInterval(() => {
-      setDisplayed(text.substring(0, i + 1));
-      i++;
-      if (i >= text.length) {
-        clearInterval(interval);
-        if (onComplete) onComplete();
-      }
-    }, speed);
-    return () => clearInterval(interval);
-  }, [text, speed, onComplete]);
-
-  return <span>{displayed}</span>;
+function getOutputColor(text: string): string {
+  const t = text.trim();
+  if (!t) return "transparent";
+  if (t === t.toUpperCase() && /^[A-Z0-9\s&:\-\.]+$/.test(t) && t.length > 1)
+    return "rgba(0, 240, 255, 0.65)";
+  if (t.startsWith("✓")) return "#4ade80";
+  if (/\.(app|com|dev|io|net)/.test(t) && !t.includes("→") && !t.includes("  "))
+    return "rgba(255,255,255,0.28)";
+  return "rgba(255,255,255,0.68)";
 }
 
 export default function Terminal() {
   const [lines, setLines] = useState<Line[]>([]);
   const [input, setInput] = useState("");
-  const [history, setHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [bootSequenceComplete, setBootSequenceComplete] = useState(false);
+  const [cmdHistory, setCmdHistory] = useState<string[]>([]);
+  const [historyIdx, setHistoryIdx] = useState(-1);
   const [focused, setFocused] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("terminal");
-  
+  const [cursorOn, setCursorOn] = useState(true);
+  const [bootDone, setBootDone] = useState(false);
+
   const inputRef = useRef<HTMLInputElement>(null);
-  const terminalBodyRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll logic: only scrolls the internal container
-  const scrollToBottom = () => {
-    if (terminalBodyRef.current) {
-      terminalBodyRef.current.scrollTop = terminalBodyRef.current.scrollHeight;
+  // Blinking cursor
+  useEffect(() => {
+    const t = setInterval(() => setCursorOn(v => !v), 530);
+    return () => clearInterval(t);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
     }
-  };
+  }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [lines]);
+  useEffect(() => { scrollToBottom(); }, [lines, scrollToBottom]);
 
-  // Initial Boot Sequence
+  // Boot sequence
   useEffect(() => {
-    let isMounted = true;
-    const runBoot = async () => {
-      for (let i = 0; i < BOOT_LINES.length; i++) {
-        if (!isMounted) return;
-        setLines(prev => [...prev, { id: `boot-${i}`, type: "system", content: BOOT_LINES[i] }]);
-        await new Promise(resolve => setTimeout(resolve, i < 3 ? 150 : 50));
+    let cancelled = false;
+    async function run() {
+      for (const { text, type, delay } of BOOT_SEQUENCE) {
+        await new Promise<void>(r => setTimeout(r, delay));
+        if (cancelled) return;
+        setLines(prev => [
+          ...prev,
+          { id: `boot-${Date.now()}-${Math.random()}`, type, content: text },
+        ]);
       }
-      if (isMounted) setBootSequenceComplete(true);
-    };
-    runBoot();
-    return () => { isMounted = false; };
+      if (!cancelled) setBootDone(true);
+    }
+    run();
+    return () => { cancelled = true; };
   }, []);
 
   const runCommand = useCallback((cmd: string) => {
     const trimmed = cmd.trim().toLowerCase();
-    const cmdId = `cmd-${Date.now()}`;
-    setLines((prev) => [...prev, { id: cmdId, type: "input", content: `best@portfolio:~$ ${cmd}` }]);
+
+    setLines(prev => [
+      ...prev,
+      { id: `in-${Date.now()}`, type: "input", content: cmd },
+    ]);
 
     if (!trimmed) return;
 
-    setHistory((prev) => [cmd, ...prev.filter((c) => c !== cmd)]);
-    setHistoryIndex(-1);
+    setCmdHistory(prev => [cmd, ...prev.filter(c => c !== cmd)]);
+    setHistoryIdx(-1);
 
     if (trimmed === "clear") {
       setLines([]);
       return;
     }
 
-    const outId = `out-${Date.now()}`;
-    if (COMMANDS[trimmed]) {
-      const output = COMMANDS[trimmed]();
-      setLines((prev) => [...prev, { id: outId, type: "output", content: output }]);
+    const handler = COMMANDS[trimmed];
+    if (handler) {
+      setLines(prev => [
+        ...prev,
+        { id: `out-${Date.now()}`, type: "output", content: handler() },
+      ]);
     } else {
-      setLines((prev) => [
+      setLines(prev => [
         ...prev,
         {
-          id: outId,
+          id: `err-${Date.now()}`,
           type: "error",
-          content: `  Command not found: "${trimmed}". Type "help" for available commands.`,
+          content: `  command not found: "${trimmed}"  —  type "help" for commands`,
         },
       ]);
     }
   }, []);
-
-  const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId);
-    if(tabId !== "terminal") {
-       runCommand("clear");
-       runCommand(tabId);
-    } else {
-       runCommand("clear");
-       runCommand("help");
-    }
-  };
-
-  const handleQuickCommandClick = (cmd: string) => {
-    runCommand(cmd);
-    inputRef.current?.focus();
-  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -254,50 +239,100 @@ export default function Terminal() {
       setInput("");
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      const newIndex = Math.min(historyIndex + 1, history.length - 1);
-      setHistoryIndex(newIndex);
-      setInput(history[newIndex] ?? "");
+      const i = Math.min(historyIdx + 1, cmdHistory.length - 1);
+      setHistoryIdx(i);
+      setInput(cmdHistory[i] ?? "");
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
-      const newIndex = Math.max(historyIndex - 1, -1);
-      setHistoryIndex(newIndex);
-      setInput(newIndex === -1 ? "" : history[newIndex]);
+      const i = Math.max(historyIdx - 1, -1);
+      setHistoryIdx(i);
+      setInput(i === -1 ? "" : cmdHistory[i]);
     } else if (e.key === "Tab") {
       e.preventDefault();
-      const match = Object.keys(COMMANDS).find((c) => c.startsWith(input.toLowerCase()));
+      const match = Object.keys(COMMANDS).find(c => c.startsWith(input.toLowerCase()));
       if (match) setInput(match);
     }
   };
 
   const renderLine = (line: Line) => {
-    const content = Array.isArray(line.content) ? line.content : [line.content];
-    const colorMap = {
-      input: "#00f0ff",
-      output: "rgba(255,255,255,0.85)",
-      error: "#ef4444",
-      success: "#10b981",
-      system: "rgba(255,255,255,0.4)",
-    };
+    const rows = Array.isArray(line.content) ? line.content : [line.content];
 
+    if (line.type === "input") {
+      const cmd = rows[0] ?? "";
+      return (
+        <motion.div
+          key={line.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.12 }}
+          className="flex gap-2 leading-relaxed"
+        >
+          <span className="term-prompt flex-shrink-0">best@portfolio:~$</span>
+          <span className="term-cmd">{cmd}</span>
+        </motion.div>
+      );
+    }
+
+    if (line.type === "boot") {
+      return (
+        <motion.div
+          key={line.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.25 }}
+          className="leading-relaxed"
+        >
+          {rows.map((text, i) => (
+            <div key={i} className="term-boot">{text}</div>
+          ))}
+        </motion.div>
+      );
+    }
+
+    if (line.type === "system") {
+      return (
+        <motion.div
+          key={line.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
+          className="leading-relaxed"
+        >
+          {rows.map((text, i) => (
+            <div key={i} className="term-system">{text || "\u00A0"}</div>
+          ))}
+        </motion.div>
+      );
+    }
+
+    if (line.type === "error") {
+      return (
+        <motion.div
+          key={line.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.12 }}
+          className="leading-relaxed"
+        >
+          {rows.map((text, i) => (
+            <div key={i} className="term-error">{text || "\u00A0"}</div>
+          ))}
+        </motion.div>
+      );
+    }
+
+    // output
     return (
-      <motion.div 
+      <motion.div
         key={line.id}
-        initial={{ opacity: 0, y: 4 }}
+        initial={{ opacity: 0, y: 2 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="group hover:bg-white/5 transition-colors duration-200 rounded px-2 -mx-2"
+        transition={{ duration: 0.18 }}
+        className="leading-relaxed"
       >
-        {content.map((text, j) => (
-          <div
-            key={j}
-            className="font-mono text-xs sm:text-sm leading-loose whitespace-pre-wrap break-words"
-            style={{ color: colorMap[line.type] }}
-          >
-             {line.type === "input" && j === 0 ? (
-                <TypewriterLine text={text} speed={15} onComplete={scrollToBottom} />
-             ) : (
-                text
-             )}
+        {rows.map((text, i) => (
+          <div key={i} style={{ color: getOutputColor(text) }}>
+            {text || "\u00A0"}
           </div>
         ))}
       </motion.div>
@@ -307,18 +342,19 @@ export default function Terminal() {
   return (
     <section className="relative py-24 px-4">
       <div className="max-w-4xl mx-auto">
-        {/* Section heading */}
+
+        {/* Heading */}
         <motion.div
-          className="text-center mb-12"
+          className="text-center mb-10"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
           <div
-            className="inline-block text-xs uppercase tracking-widest mb-4 px-4 py-1.5 rounded-full"
+            className="inline-block text-xs uppercase tracking-widest mb-4 px-3 py-1 rounded-full"
             style={{
-              color: "rgba(0, 240, 255, 0.7)",
+              color: "rgba(0, 240, 255, 0.6)",
               background: "rgba(0, 240, 255, 0.05)",
               border: "1px solid rgba(0, 240, 255, 0.1)",
             }}
@@ -336,8 +372,10 @@ export default function Terminal() {
               terminal
             </span>
           </h2>
-          <p className="text-white/30 text-sm">
-            Type <kbd className="px-2 py-0.5 rounded text-xs" style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "#00f0ff" }}>help</kbd> to get started · <kbd className="px-2 py-0.5 rounded text-xs" style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>Tab</kbd> to autocomplete · <kbd className="px-2 py-0.5 rounded text-xs" style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>↑↓</kbd> for history
+          <p style={{ color: "rgba(255,255,255,0.28)", fontSize: "0.8rem", letterSpacing: "0.04em" }}>
+            type{" "}
+            <span style={{ color: "#22d3ee", fontFamily: mono.style.fontFamily }}>help</span>
+            {" "}to get started · Tab autocomplete · ↑↓ history
           </p>
         </motion.div>
 
@@ -347,122 +385,133 @@ export default function Terminal() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="rounded-2xl overflow-hidden relative flex flex-col h-[500px]"
+          className={`relative flex flex-col rounded-xl overflow-hidden ${mono.className}`}
           style={{
-            background: "linear-gradient(135deg, rgba(10,12,16,0.95) 0%, rgba(5,6,8,0.98) 100%)",
-            backdropFilter: "blur(20px)",
-            WebkitBackdropFilter: "blur(20px)",
-            border: focused ? "1px solid rgba(0,240,255,0.25)" : "1px solid rgba(255,255,255,0.08)",
+            height: "480px",
+            background: "rgba(10, 11, 16, 0.98)",
+            border: focused
+              ? "1px solid rgba(0, 240, 255, 0.2)"
+              : "1px solid rgba(255, 255, 255, 0.07)",
             boxShadow: focused
-              ? "inset 0 0 20px rgba(0,240,255,0.05), 0 0 60px rgba(0,240,255,0.08), 0 40px 80px rgba(0,0,0,0.6)"
-              : "inset 0 0 20px rgba(255,255,255,0.02), 0 40px 80px rgba(0,0,0,0.5)",
-            transition: "border-color 0.4s, box-shadow 0.4s",
+              ? "0 0 0 1px rgba(0,240,255,0.05), 0 32px 80px rgba(0,0,0,0.85), inset 0 0 80px rgba(0,240,255,0.015)"
+              : "0 32px 80px rgba(0,0,0,0.75), inset 0 0 80px rgba(0,0,0,0.25)",
+            transition: "border-color 0.35s ease, box-shadow 0.35s ease",
+            cursor: "text",
           }}
           onClick={() => inputRef.current?.focus()}
         >
-          {/* Subtle noise/scanline overlay */}
-          <div 
-            className="absolute inset-0 pointer-events-none opacity-20"
+          {/* Scanlines */}
+          <div
+            className="absolute inset-0 pointer-events-none z-10"
             style={{
-              backgroundImage: "linear-gradient(transparent 50%, rgba(0, 0, 0, 0.25) 50%)",
-              backgroundSize: "100% 4px",
-              zIndex: 0
+              backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px)",
             }}
           />
 
-          {/* Title bar & Tabs */}
+          {/* Inner edge shadow */}
           <div
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 relative z-10 flex-shrink-0"
-            style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}
+            className="absolute inset-0 pointer-events-none z-10 rounded-xl"
+            style={{
+              boxShadow: "inset 0 0 90px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.4)",
+            }}
+          />
+
+          {/* Title bar */}
+          <div
+            className="flex items-center justify-between px-4 py-2.5 flex-shrink-0 relative z-20"
+            style={{
+              background: "rgba(255,255,255,0.018)",
+              borderBottom: "1px solid rgba(255,255,255,0.05)",
+            }}
           >
-            <div className="flex items-center gap-4">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                <div className="w-3 h-3 rounded-full bg-green-500/80" />
+            {/* Left: traffic lights + quick commands */}
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1.5 flex-shrink-0">
+                <div className="w-3 h-3 rounded-full" style={{ background: "#ff5f57" }} />
+                <div className="w-3 h-3 rounded-full" style={{ background: "#febc2e" }} />
+                <div className="w-3 h-3 rounded-full" style={{ background: "#28c840" }} />
               </div>
-              <div className="flex gap-2">
-                {["terminal", "projects", "stats", "skills"].map((tab) => (
+              <div className="flex gap-1 ml-1">
+                {QUICK_CMDS.map(cmd => (
                   <button
-                    key={tab}
-                    onClick={() => handleTabClick(tab)}
-                    className="text-xs font-mono px-2 py-1 rounded transition-colors uppercase tracking-wider"
-                    style={{
-                      color: activeTab === tab ? "#00f0ff" : "rgba(255,255,255,0.3)",
-                      background: activeTab === tab ? "rgba(0, 240, 255, 0.1)" : "transparent",
-                    }}
+                    key={cmd}
+                    onClick={e => { e.stopPropagation(); runCommand(cmd); inputRef.current?.focus(); }}
+                    className="term-tab"
                   >
-                    {tab}
+                    {cmd}
                   </button>
                 ))}
               </div>
             </div>
-            
+
+            {/* Center: title */}
             <span
-              className="text-[10px] font-mono px-2 py-0.5 rounded hidden sm:inline-block"
-              style={{
-                color: focused ? "#00f0ff" : "rgba(255,255,255,0.2)",
-                background: focused ? "rgba(0,240,255,0.08)" : "transparent",
-                border: "1px solid rgba(255,255,255,0.06)",
-              }}
+              className="absolute left-1/2 -translate-x-1/2 text-xs select-none"
+              style={{ color: "rgba(255,255,255,0.18)" }}
             >
-              {focused ? "SYS.ACTIVE" : "CLICK TO TYPE"}
+              best@portfolio — zsh
+            </span>
+
+            {/* Right: connection status */}
+            <span className="flex items-center gap-1.5 text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{
+                  background: bootDone ? "#28c840" : "#febc2e",
+                  boxShadow: bootDone ? "0 0 5px #28c840" : "0 0 5px #febc2e",
+                }}
+              />
+              {bootDone ? "connected" : "loading"}
             </span>
           </div>
 
-          {/* Quick command bar */}
-          <div className="flex gap-2 px-4 py-2 overflow-x-auto whitespace-nowrap scrollbar-hide relative z-10 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
-            <span className="text-[10px] text-white/30 uppercase tracking-widest flex items-center mr-2">Quick Execute:</span>
-            {["whoami", "projects", "stats", "clear"].map(cmd => (
-               <button 
-                  key={cmd} 
-                  onClick={() => handleQuickCommandClick(cmd)}
-                  className="text-xs font-mono px-2 py-0.5 rounded border border-white/10 hover:border-[#00f0ff] hover:text-[#00f0ff] hover:bg-[#00f0ff]/5 transition-colors text-white/50"
-                  style={{ background: "rgba(255,255,255,0.02)" }}
-               >
-                 &gt; {cmd}
-               </button>
-            ))}
+          {/* Output body */}
+          <div
+            ref={bodyRef}
+            className="flex-1 overflow-y-auto px-5 py-4 space-y-0.5 relative z-20 text-sm"
+            style={{
+              scrollbarWidth: "thin",
+              scrollbarColor: "rgba(0,240,255,0.08) transparent",
+            }}
+          >
+            {lines.map(line => renderLine(line))}
           </div>
 
-          {/* Output area (Scrollable) */}
+          {/* Input row */}
           <div
-            ref={terminalBodyRef}
-            className="px-5 py-4 flex-1 overflow-y-auto space-y-1 relative z-10"
-            style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(0,240,255,0.15) transparent", scrollBehavior: "smooth" }}
+            className="flex items-center gap-3 px-5 py-3.5 flex-shrink-0 relative z-20"
+            style={{
+              borderTop: "1px solid rgba(255,255,255,0.05)",
+              background: "rgba(0,0,0,0.22)",
+            }}
           >
-            <AnimatePresence>
-              {lines.map((line) => renderLine(line))}
-            </AnimatePresence>
-          </div>
-
-          {/* Input line (Fixed Bottom) */}
-          <div
-            className="flex items-center gap-2 px-5 py-4 relative z-10 flex-shrink-0"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(0,0,0,0.3)" }}
-          >
-            <span className="font-mono text-xs sm:text-sm text-[#00f0ff] flex-shrink-0">
+            <span className="term-prompt flex-shrink-0 select-none text-sm">
               best@portfolio:~$
             </span>
             <input
               ref={inputRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
-              className="flex-1 bg-transparent outline-none font-mono text-xs sm:text-sm text-white caret-[#00f0ff]"
-              placeholder="type a command..."
+              className="flex-1 bg-transparent outline-none text-sm"
+              style={{ color: "#f1f5f9", caretColor: "transparent" }}
               spellCheck={false}
               autoComplete="off"
-              style={{ color: "rgba(255,255,255,0.85)" }}
+              autoCapitalize="off"
             />
+            {/* Block cursor */}
             <span
-              className="w-2 h-4 flex-shrink-0"
               style={{
-                background: "#00f0ff",
-                opacity: focused ? 1 : 0,
-                animation: focused ? "blink 1s step-end infinite" : "none",
+                display: "inline-block",
+                width: "7px",
+                height: "15px",
+                background: "#22d3ee",
+                flexShrink: 0,
+                opacity: cursorOn ? 0.9 : 0,
+                transition: "opacity 0.06s",
+                boxShadow: cursorOn ? "0 0 8px rgba(34,211,238,0.6)" : "none",
               }}
             />
           </div>
@@ -470,9 +519,26 @@ export default function Terminal() {
       </div>
 
       <style jsx>{`
-        @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
+        .term-prompt { color: #22d3ee; }
+        .term-cmd    { color: #f1f5f9; }
+        .term-boot   { color: rgba(255,255,255,0.28); }
+        .term-system { color: rgba(255,255,255,0.25); }
+        .term-error  { color: #f87171; }
+
+        .term-tab {
+          font-size: 0.7rem;
+          padding: 2px 8px;
+          border-radius: 4px;
+          color: rgba(255,255,255,0.3);
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
+          transition: color 0.15s, border-color 0.15s, background 0.15s;
+          cursor: pointer;
+        }
+        .term-tab:hover {
+          color: #22d3ee;
+          border-color: rgba(34,211,238,0.25);
+          background: rgba(34,211,238,0.05);
         }
       `}</style>
     </section>
